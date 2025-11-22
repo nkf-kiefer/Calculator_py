@@ -2,8 +2,6 @@
 import flet as ft
 import math
 
-
-# Configure calculator landing page
 def main(page: ft.Page):
     page.title = "Calculator"
     page.bgcolor = "#2d2d2d"
@@ -36,7 +34,7 @@ def main(page: ft.Page):
             # Receiving the value and converting to str
             result.value = str(eval(values))
             values = result.value
-        except:
+        except Exception:
             result.value = "Error"
             values = ""
         page.update()
@@ -44,25 +42,41 @@ def main(page: ft.Page):
     # Square root operation
     def square_root(e):
         nonlocal values
-        conversion = float(values)
-        result.value = math.sqrt(conversion)
-        values = str(result.value)
+        try:
+            conversion = float(values) if values else 0.0
+            if conversion < 0:
+                raise ValueError("Negative sqrt")
+            result.value = str(math.sqrt(conversion))
+            values = result.value
+        except Exception:
+            result.value = "Error"
+            values = ""
         page.update()
 
     # Exponentiation operation (square)
     def square(e):
         nonlocal values
-        conversion = float(values)
-        result.value = conversion**2
-        values = str(result.value)
+        try:
+            conversion = float(values) if values else 0.0
+            result.value = str(conversion**2)
+            values = result.value
+        except Exception:
+            result.value = "Error"
+            values = ""
         page.update()
 
     # Reciprocal operation (1/x)
     def reciprocal(e):
         nonlocal values
-        conversion = float(values)
-        result.value = float(1 / conversion)
-        values = str(result.value)
+        try:
+            conversion = float(values)
+            if conversion == 0:
+                raise ZeroDivisionError()
+            result.value = str(1 / conversion)
+            values = result.value
+        except Exception:
+            result.value = "Error"
+            values = ""
         page.update()
 
     # Remove last digit
@@ -72,8 +86,8 @@ def main(page: ft.Page):
         result.value = values or "0"
         page.update()
 
-    # Result container configuration
-    page = ft.Container(
+    # Result container configuration (não sobrescreva 'page')
+    display_container = ft.Container(
         content=result,
         bgcolor="#37474F",
         padding=10,
@@ -82,7 +96,7 @@ def main(page: ft.Page):
         alignment=ft.alignment.center_right,
     )
 
-    # Number button style
+    # Button styles
     style_numbers = {
         "height": 60,
         "bgcolor": "#4d4d4d",
@@ -90,7 +104,6 @@ def main(page: ft.Page):
         "expand": 1,
     }
 
-    # Operator button style
     style_operators = {
         "height": 60,
         "bgcolor": "#FF9500",
@@ -98,7 +111,6 @@ def main(page: ft.Page):
         "expand": 1,
     }
 
-    # Clear button style
     style_clear = {
         "height": 60,
         "bgcolor": "#FF3B30",
@@ -106,7 +118,6 @@ def main(page: ft.Page):
         "expand": 1,
     }
 
-    # Equal button style
     style_equal = {
         "height": 60,
         "bgcolor": "#34C759",
@@ -153,11 +164,10 @@ def main(page: ft.Page):
         ],
     ]
 
-    buttons = []
-
     # Create buttons
+    rows = []
     for line in button_grid:
-        line_control = []
+        line_controls = []
         for text, style, handler, *_ in line:
             btn = ft.ElevatedButton(
                 text=text,
@@ -168,11 +178,18 @@ def main(page: ft.Page):
                     padding=0,
                 ),
             )
-            line_control.append(btn)
-        buttons.append(ft.Row(line_control, spacing=5))
+            line_controls.append(btn)
+        rows.append(ft.Row(controls=line_controls, spacing=5))
 
-    # Create main column
-    page.add(ft.Column([page, ft.Column(buttons, spacing=5)]))
+    # Main layout
+    main_column = ft.Column(
+        controls=[
+            display_container,
+            ft.Column(controls=rows, spacing=5),
+        ],
+        spacing=10,
+    )
 
+    page.add(main_column)
 
 ft.app(target=main)
